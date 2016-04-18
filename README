@@ -1,0 +1,9 @@
+As you can probably see from the source code, I made extensive use of UTF-8
+symbols for variable names. But I don't know of any compiler that handles them,
+so I've had to write a script to automatically change the names of the
+variables. These could theoretically conflict, but in practice, I don't use
+names like "Qprime" ever, so it has not been a problem.
+
+At the moment, only the inner-most loop is parallelized, and some of the
+functions used in that inner loop is parallelized. As a result, performace
+is not very great as it is right now, especially when Σ is very large.
