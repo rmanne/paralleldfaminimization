@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Parallel Implementation of Hopcroft's Algorithm for DFA Minimization</title>
+
+    <link rel="stylesheet" media="screen" href="checkpoint.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Rahul Manne">
+    <meta name="description" content="CMU 15-418 Final Project: Parallel Implementation of Hopcroft's Algorithm for DFA Minimization">
+    <meta name="robots" content="all">
+</head>
+
+<body>
+<div class="page-wrapper">
+
+    <section class="intro" id="intro">
+        <header>
+            <h1>CMU 15-418 Final Project (Checkpoint)</h1>
+            <h2>Parallel Implementation of Hopcroft's Algorithm for DFA Minimization</h2>
+        </header>
+
+        <div class="summary" id="summary" role="article">
+            <p>Hopcroft's Algorithm is a DFA Minimization Algorithm that is known to have an asymptotic linearithmic time complexity. This project is an attempt to correctly implement this algorithm for multi-core systems.</p>
+            <p><a href="/proposal.html">Proposal</a></p>
+            <p>The code is not currently available online and is hosted on a private darcs repository</p>
+        </div>
+
+        <div class="background" id="background" role="article">
+            <h3>What is DFA Minimization?</h3>
+            <p>A DFA is a computing model for recognizing <var>regular</var> languages. Testing if the DFA accepts a string is the most basic task. DFA Minimization eliminates redundant states. A minimized DFA takes less space, and likely more cache-efficient, so it also takes more time in the real world. Note that, directly, the number of applications that would benefit from this are few, but there are many closely related problems, such as minimizing a Weighted Finite State Transducer (often used in automatic speech recognition algorithms).</p>
+            <p>In a hardware situation, if you wanted to make a hardware implementation for a DFA, for specialized computation, minimizing the DFA is a way to significantly reduce the cost of the product, since potentially a lot fewer states are required to implement essentially the same thing.</p>
+        </div>
+    </section>
+
+    <div class="main">
+        <div class="challenges" id="challenges" role="article">
+            <h3>Challenges</h3>
+            <p>From the pesudocode, it's evident that much of it cannot be parallelized, since every iteration of the outer loop relies on the results of the previous iteration. However, we may be able to significantly improve certain portions of the algorithm. The inner-most loop can be trivially parallelized: there is little contention for resources. Moreover, when the number of partitions is small, the number of elements per partition is very large, meaning that we will benefit greatly from a parallel implementation of <var>partition</var>.</p>
+            <p>Divergence is a concern, since partition sizes are not necessarily similar. At the same time, the overhead of creating a worker pool that grabs work might also be too costly. The second major problem is bandwidth and synchronization.</p>
+        </div>
+
+        <div class="goals">
+            <h3>Checkpoint Summary</h3>
+            <p>So far, a correct, parallel implementation has been completed. Initially, one of the biggest issues was the cost of bandwidth. When I compressed the working set (approximately by a factor of 8), performance also improved (approximately by a factor of 4).</p>
+            <p>It's evident looking at the preliminary results to the right that, when the number of symbols is very large, the overhead of even starting up threads is perhaps costlier than just running the minimization serially. Unfortunately, it seems that I'm still quite far away from my goal, but I think that if I figure out a way to parallelize across symbols, the speedups will improve significantly, but one of the main problems is that this isn't always possible. And this is especially the case if the selected partition is the same as the splitting set. Perhaps other than this, the other partitions may be split in parallel.</p>
+        </div>
+
+        <div class="checkpoint" id="checkpoint" role="article">
+            <h3>Strategy</h3>
+            <p>I no longer believe that the goal for improving speedup past 3x on 4 cores is possible, but I think that I will still be able to achieve at least 2x average on 4 cores, since, at least, I have identified one of the sources of large amounts of sequential work. (Also, for the deliverable, I will still be producing speedup graphs, for now, the preliminary results are offered as a table.)</p>
+        </div>
+
+        <div class="results" id="results" role="article">
+            <h3>Results</h3>
+            <table id="resultstable">
+                <tr>
+                    <th>Test</th>
+                    <th>Σ</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>4</th>
+                    <th>8</th>
+                </tr>
+                <tr>
+                    <td>Structured with Sink</td>
+                    <td>2</td>
+                    <td>1.00</td>
+                    <td>1.42</td>
+                    <td>1.83</td>
+                    <td>2.09</td>
+                </tr>
+                <tr>
+                    <td>Structured Cycle</td>
+                    <td>1</td>
+                    <td>1.00</td>
+                    <td>0.67</td>
+                    <td>0.87</td>
+                    <td>1.22</td>
+                </tr>
+                <tr>
+                    <td>Structured Cycle with Sink</td>
+                    <td>2</td>
+                    <td>1.00</td>
+                    <td>1.36</td>
+                    <td>1.58</td>
+                    <td>1.82</td>
+                </tr>
+                <tr>
+                    <td>Random</td>
+                    <td>20</td>
+                    <td>1.00</td>
+                    <td>0.82</td>
+                    <td>0.34</td>
+                    <td>0.20</td>
+                </tr>
+                <tr>
+                    <td>Random</td>
+                    <td>1</td>
+                    <td>1.00</td>
+                    <td>1.33</td>
+                    <td>1.51</td>
+                    <td>1.71</td>
+                </tr>
+                <tr>
+                    <td>Random</td>
+                    <td>200</td>
+                    <td>1.00</td>
+                    <td>0.61</td>
+                    <td>0.22</td>
+                    <td>0.15</td>
+                </tr>
+                <tr>
+                    <td>Powerset Automata</td>
+                    <td>2</td>
+                    <td>1.00</td>
+                    <td>1.22</td>
+                    <td>0.77</td>
+                    <td>0.74</td>
+                </tr>
+                <tr>
+                    <td>Powerset Automata</td>
+                    <td>26</td>
+                    <td>1.00</td>
+                    <td>0.52</td>
+                    <td>0.20</td>
+                    <td>0.13</td>
+                </tr>
+            </table>
+            <p>Note that the topology of the benchmarking automata vary, but the strongest correlation seems to be in the number of symbols.</p>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="wrapper">
+            <div class="schedule" id="schedule">
+                <h3>Schedule</h3>
+                <nav>
+                    <ul>
+                    <li>April 4 | Correct Implementation</li>
+                    <li>April 11 | Parallel Implementation</li>
+                    <li><b>April 17</b> | Parallelize Across Symbols</li>
+                    <li>April 24 | Identify and Solve Bottlenecks</li>
+                    <li>May 1 | Benchmarks and Final Report</li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<div class="extra1" role="presentation"></div><div class="extra2" role="presentation"></div><div class="extra3" role="presentation"></div>
+<div class="extra4" role="presentation"></div><div class="extra5" role="presentation"></div><div class="extra6" role="presentation"></div>
+</body>
+</html>

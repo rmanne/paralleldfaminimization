@@ -1,0 +1,119 @@
+*               { margin:0; padding:0; }
+
+div,
+article,
+section,
+header,
+nav,
+figure,
+li              { position:relative; }
+.group:after    { display: block; height: 0; font-size: 0; content: "."; clear: both; visibility: hidden; }
+*               { box-sizing:border-box; } 
+
+/* ::selection       { background:#333; color:#fff; } */
+
+
+/* Rendering */
+body,
+input,
+textarea        { color:#333; } 
+
+/* Families */
+body    { font-family:"tablet-gothic", verdana, arial, sans-serif; }
+h2,
+h3      { font-family:"tablet-gothic-condensed", "arial narrow", arial, verdana, sans-serif; }
+
+/* Headings */
+h1, h2,
+h3, h4,
+h5, h6  { font-weight:normal; }
+h1      { background:#ea2e49; color:#fff; display:inline-block; margin-bottom:1em; padding:0.5em 1em; }
+h2      { color:#fff; font-weight:400; font-size:3em; letter-spacing:1px; line-height:1em; }
+h3      { font-size:1.5em; font-weight:200; letter-spacing:1px; line-height:1em; padding:0.5em 0 0.25em 0; }
+
+/* Links */
+a                               { border-bottom:1px solid rgba(0,0,0,0.2); color:#333; text-decoration:none; transition:border-color 0.2s ease-in-out; }
+a:hover                         { border-color:#ea2e49; }
+section.intro div.summary p a,
+div.challenges p a,
+div.goals p a           { color:#fff; }
+div.goals p a:hover     { border-color:#fff; }
+
+/* Paragraph styles */
+p,
+li                              { font-size:0.8em; font-weight:300; /* Regular */ line-height:1.5em; padding:0.5em 0; }
+h1,
+section.intro div.summary p,
+div.results p:last-child   { font-weight:300; letter-spacing:2px; text-transform:uppercase; }
+section.intro div.summary p:last-child, 
+div.results p:last-child   { border-top:1px solid #ea2e49; margin-top:1em; padding-top:1.5em; }
+
+/* Other bits & bobs */
+em,
+strong                          { font-style:normal; font-weight:300; }
+
+
+html                            { background:#daede2; padding:3%; }
+body                            { background:#77c4d3; }
+div.page-wrapper                { z-index:2; }
+
+section.intro                   { padding:5%; }
+section.intro div.summary       { color:#fff; padding:5% 0; }
+section.intro div.background    { background:rgba(255,255,255,0.9); color:#333; margin-left:-30%; padding:5% 5% 5% 30%; }
+div.main                        { padding:0%; }
+aside.sidebar                   { background:rgba(246,247,146,0.9); padding:5%; }
+aside.sidebar ul                { padding:0.5em 0 2em 0; }
+aside.sidebar ul li             { color:rgba(0,0,0,0.4); list-style:none; margin:0; padding:0 0 0.825em 0; }
+
+div.challenges                  { color:#000; padding:5%; }
+div.goals                       { background:rgba(234,46,73,0.9); color:#fff; padding:5%; }
+div.checkpoint                  { background:rgba(255,255,255,0.9); margin-top:10%; padding:5%; }
+div.results                     { background:rgba(255,255,255,0.9); padding:5%; }
+
+table#resultstable                    { width: 100%; }
+table#resultstable tr:nth-child(even) { background-color: #eee; }
+table#resultstable tr:nth-child(odd)  { background-color: #fff; }
+table#resultstable th                 { color: white; background-color: black; text-align: left; }
+
+
+@media screen and (min-width:1px) {
+    body { font-size:85%; }
+}
+
+@media screen and (min-width:550px) {
+    h2              { font-size:4em; }
+    section.intro   { width:66.6%; }
+    aside.sidebar   { position:absolute; right:0; top:2.5%; width:32.75%; }
+    div.extra1      { background:rgba(51,55,69,0.9); bottom:0; right:0; position:fixed; top:0; width:30%; z-index:1; }
+    div.challenges  { float:left; width:50%; }
+    div.goals       { float:left; width:49%; }
+    div.checkpoint  { float:left; }
+    div.results     { float:left; }
+}
+
+@media screen and (min-width:650px) {
+    div.checkpoint  { margin-top:0; width:30%; }
+    div.results     { width:69%; }
+}
+
+@media screen and (min-width:700px) {
+    body { font-size:90%; }
+}
+@media screen and (min-width:800px) {
+    body { font-size:100%; }
+}
+@media screen and (min-width:900px) {
+    body { font-size:110%; }
+}
+@media screen and (min-width:1500px) {
+    body { font-size:125%; }
+}
+@media screen and (min-width:1800px) {
+    body { font-size:150%; }
+}
+@media screen and (min-width:2100px) {
+    body { font-size:175%; }
+}
+@media screen and (min-width:2500px) {
+    body { font-size:200%; }
+}

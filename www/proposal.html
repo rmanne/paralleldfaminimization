@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Parallel Implementation of Hopcroft's Algorithm for DFA Minimization</title>
+
+    <link rel="stylesheet" media="screen" href="proposal.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Rahul Manne">
+    <meta name="description" content="CMU 15-418 Final Project: Parallel Implementation of Hopcroft's Algorithm for DFA Minimization">
+    <meta name="robots" content="all">
+</head>
+
+<body>
+<div class="page-wrapper">
+
+    <section class="intro" id="intro">
+        <header>
+            <h1>CMU 15-418 Final Project (Proposal)</h1>
+            <h2>Parallel Implementation of Hopcroft's Algorithm for DFA Minimization</h2>
+        </header>
+
+        <div class="summary" id="summary" role="article">
+            <p>Hopcroft's Algorithm is a DFA Minimization Algorithm that is known to have an asymptotic linearithmic time complexity. This project is an attempt to correctly implement this algorithm for multi-core systems.</p>
+            <p>The code is not currently available online and is hosted on a private darcs repository</p>
+        </div>
+
+        <div class="background" id="background" role="article">
+            <h3>What is DFA Minimization?</h3>
+            <p>A DFA is a computing model for recognizing <var>regular</var> languages, often represented as regular expressions (since a concise string of letters is often more readable by humans than a graph of nodes and edges). Finding out whether or not the DFA accepts a given string is the most basic task, but this can take a very long time, if the DFA is very large and hard to traverse. DFA Minimization allows the computation of a DFA to be significantly faster, by eliminating redundant states. A minimized DFA takes less space, and likely more cache-efficient, so it also takes more time in the real world. It also often becomes more human-readable. Note that, directly, the number of applications that would benefit from this are few, but there are many closely related problems, such as minimizing a Weighted Finite State Transducer (used in some automatic speech recognition algorithms).</p>
+            <p>In a hardware situation, if you wanted to make a hardware implementation for a DFA, for specialized computation, minimizing the DFA is a way to significantly reduce the cost of the product, since potentially a lot fewer states are required to implement essentially the same thing.</p>
+        </div>
+    </section>
+
+    <div class="main">
+        <div class="challenges" id="challenges" role="article">
+            <h3>Challenges</h3>
+            <p>Specific pseudocode could be found on Wikipedia among many other places, but the important thing, that only complexity papers will inform you of, is the data structures that should be used in order to implement the algorithm efficiently. It seems to heavily rely on <var>partition</var> (<var>intersection</var> and <var>difference</var>).</p>
+            <p>From the pesudocode, it's evident that much of it cannot be parallelized, since every iteration of the outer loop relies on the results of the previous iteration. However, we may be able to significantly improve certain portions of the algorithm. The inner-most loop can be trivially parallelized: there is no contention for resources (except to maybe append to an array of partitions). Moreover, when the number of partitions is small, the number of elements per partition is very large, meaning that we will benefit greatly from a parallel implementation of <var>partition</var>. As the number of partitions increases, we can instead start parallelizing across partitions, as in, have each thread independently work on one partition at a time. This would mean that multiple representations for the data set may make sense.</p>
+            <p>Naturally, there will be divergent execution, since partition sizes are not necessarily even. Moreover, the implementation seems to require a lot of communication between computations. In fact, we MUST synchronize at the end of each outer loop iteration. This means that if we wanted to parallelize this across multiple nodes in a cluster, we need a different strategy. However, since, on a normal CPU, we already have a shared address space between threads, this overhead should significantly be reduced.</p>
+            <p>It is worth noting that since synchronization happens implicitly between cuda kernel invocations, perhaps we may be able to make an efficient GPU solution as well, and even on a GPU, we have a shared address space, though, writes are not flushed until after the kernel invocation ends.</p>
+        </div>
+
+        <div class="goals">
+            <h3>Strategy and Goals</h3>
+            <p>This project will be programmed in C++, using OpenMP for parallelization. C++ has classes, which are much nicer than the pure-function based C. OpenMP may make more sense given the communication requirement, than to use something like OpenMPI (message passing) or ISPC (data-parallel). Cuda is also an option, but it will likely invoke a synchronization overhead.</p>
+            <p>In terms of resources, my own laptop (two cores) will be used for testing and correctness, and a GHC machine for benchmarking. I am starting from an empty codebase. Moreover, I plan on writing my own concurrent unordered <var>Set</var> library (for concurrent insertions, and constant time lookups), based on <a href="https://github.com/sparsehash/sparsehash">Google's <var>densehash</var> library</a>. I will also write my own <var>Seq</var> library (sorted, fixed-sized array), for linear-time <var>partition</var> and linear-time <var>map</var>. I'm using a combination of Wikipedia and <a href="https://www.cs.cmu.edu/~flac/PDFs/30-mini-algo.pdf">lecture notes</a> from FLAC (15-453).</p>
+            <p>One of the most important parts of this lab will be achieving correctness. Thus, I must construct a variety of correct test cases and attempt to approximately represent the kind of DFAs that one might see in the real world.</p>
+            <p>I would like to be able to achieve at least 3x performance, on average across all of my test cases, on a 6-core system (in other words, at least a 50% scale up). The deliverable will likely just be speedup graphs. I could perhaps show a output of my program that is really neat, but it would be very artificial, if I wanted anyone to be able to understand it, because it's not like our eyes were trained to understand and marvel at the design of a minimal million-state DFA.</p>
+            <p>If I have additional time, I want to first attempt to achieve at least a 75% scale up (4.5x speedup on a 6-core system). I think that this is a reasonable goal because, while a large amount of synchronization is required, since we'll be working on a system that won't have too much of a communication overhead, and since the algorithm spends a fair bit of its time during computation, it may be possible to scale it well across a large number of cores. I also would like to write a Cuda version, to enable GPUs to run this algorithm.</p>
+        </div>
+
+        <div class="checkpoint" id="checkpoint" role="article">
+            <h3>Goals Achieved by Checkpoint</h3>
+            <p>Coming Soon</p>
+        </div>
+
+        <div class="results" id="results" role="article">
+            <h3>Results</h3>
+            <p>Coming Soon</p>
+        </div>
+
+        <footer>
+            <p>Coming Soon</p>
+        </footer>
+    </div>
+
+    <aside class="sidebar">
+        <div class="wrapper">
+            <div class="schedule" id="schedule">
+                <h3>Schedule</h3>
+                <nav>
+                    <ul>
+                    <li><b>April 4</b> | Correct Implementation</li>
+                    <li>April 11 | Parallel Implementation</li>
+                    <li>April 17 | Fast Parallel Implementation (3x speedup)</li>
+                    <li>April 24 | Faster Parallel Implementation (4.5x speedup)</li>
+                    <li>May 1 | Benchmarks and Final Report</li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<div class="extra1" role="presentation"></div><div class="extra2" role="presentation"></div><div class="extra3" role="presentation"></div>
+<div class="extra4" role="presentation"></div><div class="extra5" role="presentation"></div><div class="extra6" role="presentation"></div>
+</body>
+</html>
