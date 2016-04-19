@@ -11,9 +11,9 @@ void benchmark2() {
 
     const Nat B = 3;
     DFA* dfas[B] = {
-        randomDFA(10, 20, 2, 1)->prepare(),
-        randomDFA(100000, 1, 90000, 2)->prepare(),
-        randomDFA(10, 200, 5, 3)->prepare(),
+        randomDFA(2000, 20, 2, 1)->prepare(),
+        randomDFA(300000, 1, 270000, 2)->prepare(),
+        randomDFA(100, 200, 5, 3)->prepare(),
     };
     runBenchmarks<B>(dfas);
     for (Nat b = 0; b < B; b++)

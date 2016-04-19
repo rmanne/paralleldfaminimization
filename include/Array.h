@@ -1,19 +1,19 @@
-/* @file Vector.h
+/* @file Array.h
  *
  * This class is provides a dynamic-size array.
  */
 #pragma once
 #include "Config.h"
 
-class Vector {
+class Array {
 private:
     Nat  c;
     Nat  s;
     Nat* d;
 
 public:
-    Vector();
-    ~Vector();
+    Array();
+    ~Array();
 
     Nat size() const;
 

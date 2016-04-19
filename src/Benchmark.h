@@ -14,7 +14,7 @@ static inline void progressInit(int benchmarks) {
     progressMax = BENCHMARK_THREADS * BENCHMARK_ITERATIONS * benchmarks;
     printf("[>");
     for (int i = 0; i < progressMax; i++)
-        printf(" ");
+        printf(i % (BENCHMARK_THREADS * BENCHMARK_ITERATIONS) ? " " : "|");
     printf("]\r");
     fflush(stdout);
 }
@@ -22,10 +22,10 @@ static inline void progressIncrement() {
     progressCurrent++;
     printf("[");
     for (int i = 0; i < progressCurrent; i++)
-        printf("=");
+        printf(i % (BENCHMARK_THREADS * BENCHMARK_ITERATIONS) ? "=" : "|");
     printf(">");
     for (int i = progressCurrent; i < progressMax; i++)
-        printf(" ");
+        printf(i % (BENCHMARK_THREADS * BENCHMARK_ITERATIONS) ? " " : "|");
     printf("]\r");
     fflush(stdout);
 }
@@ -65,7 +65,7 @@ static inline void printStats(const Nat BENCHMARK_COUNT, Nat (*timingArray)[BENC
         printf("%d  ", 1 << t);
     printf("\n");
     for (Nat b = 0; b < BENCHMARK_COUNT; b++) {
-        printf("Speedups t%d:", b);
+        printf("Speedups %d:", b);
         for (Nat i = 0; i < BENCHMARK_THREADS; i++) {
             double speedup = timingArray[b][0] / (double)timingArray[b][i];
             if (speedup < 10)
@@ -78,6 +78,22 @@ static inline void printStats(const Nat BENCHMARK_COUNT, Nat (*timingArray)[BENC
         printf("\n");
     }
     printf("\n");
+
+    printf("Threads:     ");
+    for (Nat t = 0; t < 4 && t < BENCHMARK_THREADS; t++) // until 8
+        printf("    %d    ", 1 << t);
+    for (Nat t = 4; t < 7 && t < BENCHMARK_THREADS; t++) // until 64
+        printf("   %d    ", 1 << t);
+    for (Nat t = 7; t < BENCHMARK_THREADS; t++) // until 512
+        printf("  %d    ", 1 << t);
+    printf("\n");
+    for (Nat b = 0; b < BENCHMARK_COUNT; b++) {
+        printf("Times    %d:", b);
+        for (Nat i = 0; i < BENCHMARK_THREADS; i++)
+            printf(" %8u", timingArray[b][i]);
+        printf("\n");
+    }
+    printf("\n\n");
 }
 
 static inline Nat timeMinimization(DFA* dfa) {

@@ -18,7 +18,6 @@ static inline void testPowerset(NFA* nfa, DFA* trueMinimal) {
 
 bool test3() {
     const char B = 2;
-    Nat timingArray[B][4] = { 0 };
 
     NFA* nfas[B];
     DFA* minimals[B];
@@ -63,10 +62,10 @@ bool test3() {
     minimals[1]->δ[11]['e' - 'a'] = 12;
     // "(pikachu|eevee)" END
 
-    for (char b = 1; b < B; b++)
+    for (Nat b = 1; b < B; b++)
         testPowerset(nfas[b], minimals[b]);
 
-    for (char b = 0; b < B; b++) {
+    for (Nat b = 0; b < B; b++) {
         delete nfas[b];
         delete minimals[b];
     }

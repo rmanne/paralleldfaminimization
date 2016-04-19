@@ -1,16 +1,16 @@
 // for additional benchmarking
 #pragma once
 
-#include "Vector.h"
+#include "Array.h"
 #include <cmath>
 
 class NFA {
 public:
     Nat Q;
     Nat Σ;
-    Matrix<Vector> δ;
-    Vector I;
-    Vector F;
+    Matrix<Array> δ;
+    Array I;
+    Array F;
 
     NFA(Nat Q, Nat Σ) : Q(Q), Σ(Σ), δ(Q, Σ), I(), F() {
     }

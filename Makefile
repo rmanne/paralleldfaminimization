@@ -2,8 +2,8 @@
 
 #CC=icc -std=c++11 -fopenmp
 
-CC=g++ -std=c++11 -fopenmp -g
-#CC=g++ -std=c++11 -fopenmp -Ofast -march=native
+#CC=g++ -std=c++11 -fopenmp -Wall -march=native -g
+CC=g++ -std=c++11 -fopenmp -Wall -Ofast -march=native
 
 all: tmp
 

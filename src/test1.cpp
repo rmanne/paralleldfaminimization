@@ -2,7 +2,7 @@
 
 #include "Specials.h"
 
-#include <ctime>
+#include "Benchmark.h" // just for timing
 #include <cstdio>
 
 bool test1() {
@@ -20,13 +20,14 @@ bool test1() {
         DFA* dfa = specialDFA1(i);
         dfa->prepare();
 
-        clock_t begin = clock();
+        long begin = currentTime();
         DFA* minimal = dfa->minimize();
-        printf("Ticks for %d : %d\n", i, clock() - begin);
+        printf("Ticks for %d : %ld\n", i, currentTime() - begin);
         minimal->prepare();
         DFA* minimal2 = minimal->minimize();
 
-        test &= knownMinimal->operator==(minimal) && knownMinimal->operator==(minimal2);
+        ASSERT(knownMinimal->operator==(minimal) && knownMinimal->operator==(minimal2));
+        //test &= knownMinimal->operator==(minimal) && knownMinimal->operator==(minimal2);
 
         delete dfa;
         delete minimal;

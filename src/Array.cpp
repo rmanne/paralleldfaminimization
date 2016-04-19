@@ -1,31 +1,31 @@
-#include "Vector.h"
+#include "Array.h"
 
 #include <cstdlib>
 
-Vector::Vector() : c(0), s(0), d(NULL) {
+Array::Array() : c(0), s(0), d(NULL) {
 }
 
-Vector::~Vector() {
+Array::~Array() {
     free(d);
 }
 
-Nat Vector::size() const {
+Nat Array::size() const {
     return s;
 }
 
-Nat* Vector::begin() const {
+Nat* Array::begin() const {
     return d;
 }
 
-Nat* Vector::end() const {
+Nat* Array::end() const {
     return d + s;
 }
 
-Nat Vector::operator[](Nat i) const {
+Nat Array::operator[](Nat i) const {
     return d[i];
 }
 
-void Vector::insert(Nat n) {
+void Array::insert(Nat n) {
     Nat i = s++;
     if (i >= c) { // resize
         c = c * 2 + 1;

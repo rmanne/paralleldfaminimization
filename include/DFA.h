@@ -2,7 +2,8 @@
 #include "Config.h"
 
 #include "Seq.h"
-#include "Vector.h"
+#include "Array.h"
+#include "Set.h"
 
 template<typename T>
 class Matrix {
@@ -26,10 +27,13 @@ public:
 typedef Matrix<Nat> Transitions;
 
 class DFA {
-private:
-    Matrix<Vector> backEdges;
-
 public:
+#ifdef FINETUNE
+    mutable long times[FINETUNE];
+    mutable long states[FINETUNE];
+    mutable int timeSamples = 0;
+#endif
+
     Nat Q;
     Nat Σ;
 
@@ -38,22 +42,24 @@ public:
     Nat q₀;
     Seq F;
 
-    // TODO: does destructer already remove data allocated for F/δ?
+private:
+    Matrix<Set> backEdges;
+public:
 
-    DFA() : DFA(0, 0) { }
     DFA(Nat Q, Nat Σ);
+    DFA() : DFA(0, 0) { }
 
     DFA* prepare(); // returns pointer to self
 
-    bool operator==(DFA* M);    // O(QΣ) * some logarithmic factor (BFS)
+    bool operator==(DFA* M);    // O(QΣlog(Q)) <- probably
 
-    DFA* quotient(Nat const * const ≡, Nat Q′) const;   // O(QΣ) | O(Σ)
+    DFA* quotient(Seq** P, Nat const * const ≡, Nat Q′) const;   // O(QΣ) | O(Σ)
     DFA* minimize() const;
 
     void reachableHelper(Nat*, Nat*, Nat) const;
     DFA* reachable() const;
 
-    bool accept(Vector* s) const;
+    bool accept(Array* s) const;
 
     void print() {
         printf("%d states on %d symbols\n", Q, Σ);
