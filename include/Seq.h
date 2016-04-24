@@ -35,6 +35,11 @@ public:
         Nat*  elemArray;
     };
 
+    struct State {
+        Nat  lastSplittingσ;
+        State() : lastSplittingσ(-1) { }
+    } state;
+
     Seq(const Seq& s, Type τ); // copy with possible conversion (unsupported)
     Seq(const Seq& s);         // copy
 

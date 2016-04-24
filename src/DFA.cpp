@@ -163,12 +163,15 @@ DFA* DFA::minimize() const {
             if (P[i]->size() > 0 && B⁻->size() > 0) {
                 Nat k = Q′++;
                 P[k] = B⁻;
+                P[k]->state.lastSplittingσ = σ;
 
-                S.insert(k); // TODO
-                //if (P[k]->size() < P[i]->size())
-                //    S.insert(k);
-                //else
-                //    S.insert(i);
+                if (σ != Σ - 1)
+                    S.insert(k);
+                else
+                    if (P[k]->size() < P[i]->size())
+                        S.insert(k);
+                    else
+                        S.insert(i);
             } else if (B⁻->size() > 0) {
                 delete P[i];
                 P[i] = B⁻;
@@ -191,8 +194,10 @@ DFA* DFA::minimize() const {
                     continue;
                 for (Nat σ = 0; σ < Σ; σ++) {
                     Seq* U = UΣ[σ];
-                    if (U->c == 0)
+                    if (P[j]->state.lastSplittingσ == σ || U->c == 0) {
+                        P[j]->state.lastSplittingσ = -1;
                         continue;
+                    }
 
                     Nat initialSize = P[j]->size();
                     Seq* B⁻ = P[j]->partition(U);
@@ -201,6 +206,7 @@ DFA* DFA::minimize() const {
                     if (P[j]->size() > 0 && B⁻->size() > 0) {
                         Nat k = __sync_fetch_and_add(&Q′, 1);
                         P[k] = B⁻;
+                        P[k]->state.lastSplittingσ = σ;
 
                         if (S.contains(j))
                             S.insert(k);

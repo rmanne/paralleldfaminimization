@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Parallel DFA Minimization</title>
+
+    <link rel="stylesheet" media="screen" href="final.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Rahul Manne">
+    <meta name="description" content="CMU 15-418 Final Project: Parallel DFA Minimization">
+    <meta name="robots" content="all">
+</head>
+
+<body>
+<div class="page-wrapper">
+
+    <section class="intro" id="intro">
+        <header>
+            <h1>CMU 15-418 Final Project</h1>
+            <h2>Parallel DFA Minimization</h2>
+        </header>
+
+        <div class="summary" id="summary" role="article">
+            <p>Hopcroft's Algorithm is a DFA Minimization Algorithm that is known to have an asymptotic linearithmic time complexity. This project is an attempt to correctly implement a modified version of the algorithm whose complexity is approximately the same, for multi-core systems.</p>
+            <p><a href="https://github.com/rmanne/paralleldfaminimization">GitHub</a> | <a href="checkpoint.html">Checkpoint</a> | <a href="proposal.html">Proposal</a></p>
+        </div>
+
+        <div class="background" id="background" role="article">
+            <h3>What is DFA Minimization?</h3>
+            <p>A DFA is a computing model for recognizing <var>regular</var> languages. Testing if the DFA accepts a string is the most basic task. DFA Minimization eliminates redundant states. A minimized DFA is more cache-efficient and takes less space, which in a hardware implementation, would also decrease the cost. Directly, the number of applications that would benefit from this are few, but there are many closely related problems, such as minimizing a Weighted Finite State Transducer (often used in automatic speech recognition algorithms).</p>
+            <h3>Naive Implementation of Parallel Minimization using Refinement</h3>
+            <pre>
+                P ← { Q \ F, F }
+                S ← { ∀(σ ∈ Σ) (σ, min(P₀, P₁)) }
+                while S.notEmpty
+                    (σ, C) ← S
+                    C′ ← ∀(q ∈ C) { q′ ∈ Q | δ(q′, σ) = q }
+                    ∀(B ∈ P) split by C
+                        B⁺ ← B ∩ C
+                        B⁻ ← B \ B⁺
+                        replace B ∈ P by B⁺ and B⁻
+                        ∀(σ′ ∈ Σ)
+                            if B ∈ S
+                                then replace B ∈ S by B⁺, B⁻
+                                else insert min(B⁺, B⁻) to S
+            </pre>
+            <p>*Note that this is not a strictly faithful implementation. It is possible to complete the inner loop in just C′ time, but the naive implementation runs this in Q + C′, which is notably worse. However, from experimentation, the asymptotic complexity, at least on the test cases I created, is not much different from linearthimic. The important thing is that this is significantly easier to parallelize than a proper implementation.</p>
+            <h3>Parallel Strategy</h3>
+            <pre>
+                P ← { Q \ F, F }
+                S ← { min(P₀, P₁) }
+                while S.notEmpty
+                    C ← S
+                    CΣ′ ← { }
+                    ∀(σ ∈ Σ) serial
+                        CΣ′[σ] ← ∀(q ∈ C) { q′ ∈ Q | δ(q′, σ) = q }
+                        (C, C⁻) ← (C ∩ C′, B \ C′)
+                        if C.notEmpty ∧ C⁻.notEmpty
+                            insert C⁻ to P
+                            if σ ≠ Σ - 1
+                                insert C⁻ to S *Note1
+                            else
+                                insert min(C⁺, C⁻) to S
+                        else if C⁻.notEmpty
+                            replace C by C⁻
+
+                    ∀(B ∈ P \ { C }) parallel *Note2
+                        ∀(σ ∈ Σ)
+                            C′ ← CΣ′[σ]
+                            (B, B⁻) ← (B ∩ C′, B \ C′)
+                            if B.notEmpty ∧ B⁻.notEmpty
+                                append B⁻ to P
+                                if B ∈ S
+                                    replace B ∈ S by B⁺, B⁻
+                                else
+                                    insert min(B⁺, B⁻) to S
+                            else if B⁻.notEmpty
+                                replace B by B⁻
+            </pre>
+            <p>Note1: Notice how we are not picking the minimum of C⁺ and C⁻, but rather, always inserting C⁻. This is because for the higher σ, we want to do not just C⁺, but also C⁻. In the lower σ, we do want to just do the new C⁺ rather than C⁻. However, we also note that, in the case that C⁺ is split again, we will have had to add C⁻ again anyways. When the last symbol is reached (which is always the case when Σ = 1, only C⁺ is added, because we can guarantee that it won't be split again anyways). This means that the complexity will not be affected at all when Σ = 1, and when it is not, with very high probability, the complexity will not increase by this choice.</p>
+            <p>Note2: loop when new blocks are added to P. In these new blocks, we can skip the σ that it was just split by.</p>
+            <p>As we can see here, the total amount of work done is exactly the same, and the algorithm is completely unchanged. The main difference in the order in which elements are extracted from the 'split' list, which, in the algorithm is arbitrary, meaning that this ordering does not matter or have any affect on the asymptotic complexity of the problem. Moreover, the order in the parallel part of the loop also does NOT matter because the sets there are disjoint, meaning the computation is independent of each other.</p>
+        </div>
+    </section>
+
+    <div class="main">
+        <div class="challenges" id="challenges" role="article">
+            <h3>Challenges</h3>
+            <p>Even from the common pseudocode, it appears to be the case that much of it, since every iteration of the outer loop relies on the results of the previous iteration. Even after some reorganization, the 'Parallel Strategy' is SIGNIFICANTLY better than the common version. However, we can see that even now a large portion of it is forced to be done in serial. However, we may be able to parallelize the inner part, the call to partition, which can potentially be a huge boost when the number of elements in the partition is very large.</p>
+            <p>Divergence is a concern, since partition sizes are not necessarily similar. At the same time, the overhead of creating a worker pool that grabs work might also be too costly. The second major problem is bandwidth and synchronization.</p>
+        </div>
+
+        <div class="goals">
+            <h3>Summary</h3>
+            <p>With a minor hit to the worse case, a fairly scalable parallel implementation has been completed. Initially, one of the biggest issues was the cost of bandwidth. When I compressed the working set (approximately by a factor of 8), performance also improved (approximately by a factor of 4).</p>
+            <p>It's evident looking at the final results that, even when the number of symbols is very large, we no longer have the bottleneck from the previous version. In fact, it slightly prefers the case where there are a large number of symbols.</p>
+            <p>Another incredibly helpful optimization was in vectorizing everything. By this, I don't mean using SIMD, but rather, using 64-bit values which support very efficient operations like counting the number of '1's (popcnt), taking the complement (~), partition (&amp;, ^), and even computing union (|). Perhaps an implementation using SIMD could help even more, but it seems that 4 popcnts are significantly faster than any avx instruction for counting the number of bits, and in addition, SIMD wouldn't support atomic (|).</p>
+        </div>
+
+        <div class="checkpoint" id="checkpoint" role="article">
+            <h3>Strategy</h3>
+            <p>The speedup graph:</p>
+            <a href="final.jpg"><img src="final.jpg" alt="speedup graph" width=256 height=256></a>
+        </div>
+
+        <div class="results" id="results" role="article">
+            <h3>Results</h3>
+            <table id="resultstable">
+                <tr>
+                    <th>Test</th>
+                    <th>Σ</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>4</th>
+                    <th>8</th>
+                </tr>
+                <tr>
+                    <td>Structured with Sink</td>
+                    <td>2</td>
+                    <td>1.00</td>
+                    <td>2.09</td>
+                    <td>3.44</td>
+                    <td>3.47</td>
+                </tr>
+                <tr>
+                    <td>Structured Cycle</td>
+                    <td>1</td>
+                    <td>1.00</td>
+                    <td>0.98</td>
+                    <td>1.50</td>
+                    <td>2.12</td>
+                </tr>
+                <tr>
+                    <td>Structured Cycle with Sink</td>
+                    <td>2</td>
+                    <td>1.00</td>
+                    <td>1.75</td>
+                    <td>3.06</td>
+                    <td>3.23</td>
+                </tr>
+                <tr>
+                    <td>Random</td>
+                    <td>20</td>
+                    <td>1.00</td>
+                    <td>0.93</td>
+                    <td>1.48</td>
+                    <td>1.99</td>
+                </tr>
+                <tr>
+                    <td>Random</td>
+                    <td>1</td>
+                    <td>1.00</td>
+                    <td>1.45</td>
+                    <td>1.78</td>
+                    <td>1.53</td>
+                </tr>
+                <tr>
+                    <td>Random</td>
+                    <td>200</td>
+                    <td>1.00</td>
+                    <td>1.44</td>
+                    <td>2.21</td>
+                    <td>2.55</td>
+                </tr>
+                <tr>
+                    <td>Powerset Automata</td>
+                    <td>2</td>
+                    <td>1</td>
+                    <td>1.42</td>
+                    <td>1.70</td>
+                    <td>1.75</td>
+                </tr>
+                <tr>
+                    <td>Powerset Automata</td>
+                    <td>26</td>
+                    <td>1.00</td>
+                    <td>1.55</td>
+                    <td>2.23</td>
+                    <td>1.95</td>
+                </tr>
+            </table>
+            <p>Old Table:</p>
+            <table id="resultstable">
+                <tr>
+                    <th>Test</th>
+                    <th>Σ</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>4</th>
+                    <th>8</th>
+                </tr>
+                <tr>
+                    <td>Structured with Sink</td>
+                    <td>2</td>
+                    <td>1.00</td>
+                    <td>1.42</td>
+                    <td>1.83</td>
+                    <td>2.09</td>
+                </tr>
+                <tr>
+                    <td>Structured Cycle</td>
+                    <td>1</td>
+                    <td>1.00</td>
+                    <td>0.67</td>
+                    <td>0.87</td>
+                    <td>1.22</td>
+                </tr>
+                <tr>
+                    <td>Structured Cycle with Sink</td>
+                    <td>2</td>
+                    <td>1.00</td>
+                    <td>1.36</td>
+                    <td>1.58</td>
+                    <td>1.82</td>
+                </tr>
+                <tr>
+                    <td>Random</td>
+                    <td>20</td>
+                    <td>1.00</td>
+                    <td>0.82</td>
+                    <td>0.34</td>
+                    <td>0.20</td>
+                </tr>
+                <tr>
+                    <td>Random</td>
+                    <td>1</td>
+                    <td>1.00</td>
+                    <td>1.33</td>
+                    <td>1.51</td>
+                    <td>1.71</td>
+                </tr>
+                <tr>
+                    <td>Random</td>
+                    <td>200</td>
+                    <td>1.00</td>
+                    <td>0.61</td>
+                    <td>0.22</td>
+                    <td>0.15</td>
+                </tr>
+                <tr>
+                    <td>Powerset Automata</td>
+                    <td>2</td>
+                    <td>1.00</td>
+                    <td>1.22</td>
+                    <td>0.77</td>
+                    <td>0.74</td>
+                </tr>
+                <tr>
+                    <td>Powerset Automata</td>
+                    <td>26</td>
+                    <td>1.00</td>
+                    <td>0.52</td>
+                    <td>0.20</td>
+                    <td>0.13</td>
+                </tr>
+            </table>
+            <p>Note that the topology of the benchmarking automata vary, but the strongest correlation seems to be in the number of symbols.</p>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="wrapper">
+            <div class="schedule" id="schedule">
+                <h3>Schedule</h3>
+                <nav>
+                    <ul>
+                    <li>April 4 | Correct Implementation</li>
+                    <li>April 11 | Parallel Implementation</li>
+                    <li><b>April 17</b> | Parallelize Across Symbols</li>
+                    <li>April 24 | Identify and Solve Bottlenecks</li>
+                    <li>May 1 | Benchmarks and Final Report</li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<div class="extra1" role="presentation"></div><div class="extra2" role="presentation"></div><div class="extra3" role="presentation"></div>
+<div class="extra4" role="presentation"></div><div class="extra5" role="presentation"></div><div class="extra6" role="presentation"></div>
+</body>
+</html>

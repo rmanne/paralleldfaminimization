@@ -10,6 +10,7 @@ sanitize() {
         | sed -e s/′/prime/g        \
         | sed -e s/≡/equivalence/g  \
         | sed -e s/⁻/minus/g        \
+        | sed -e s/⁺/plus/g        \
         | sed -e s/τ/tau/g          \
         | sed -e s/σ/sigma/g        \
         > build/$FILE

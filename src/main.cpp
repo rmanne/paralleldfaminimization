@@ -20,8 +20,12 @@ void unitbenchmarks();
 
 int main() {
 #ifdef FINETUNE
-    DFA* dfa = specialDFA2(2000)->prepare();
-    DFA* dfa2 = specialDFA2(2000)->prepare();
+    //DFA* dfa = specialDFA1(100000)->prepare();
+    //DFA* dfa2 = specialDFA1(100000)->prepare();
+    //DFA* dfa = specialDFA2(2000)->prepare();
+    //DFA* dfa2 = specialDFA2(2000)->prepare();
+    DFA* dfa = specialDFA3(100000)->prepare();
+    DFA* dfa2 = specialDFA3(100000)->prepare();
     long states[FINETUNE]; long times[FINETUNE]; int timeSamples;
     long states2[FINETUNE]; long times2[FINETUNE]; int timeSamples2;
     omp_set_num_threads(1);

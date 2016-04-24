@@ -12,7 +12,6 @@ bool test1() {
     knownMinimal->δ[1][0] = 1;
     knownMinimal->δ[1][1] = 1;
     knownMinimal->q₀ = 0;
-    knownMinimal->F.c = 1;
     knownMinimal->F.insert(1);
 
     bool test = true;

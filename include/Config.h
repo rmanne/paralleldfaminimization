@@ -38,7 +38,7 @@ typedef unsigned int Nat;
 // for now, just use longs, we can think about vectorizing later
 #include <unistd.h>
 #define PACKED_SIZE (8 * sizeof(long))
-#define CACHELINE_SIZE (8 * sysconf(_SC_LEVEL1_DCACHE_LINESIZE) / 4)
+#define CACHELINE_SIZE (8 * sysconf(_SC_LEVEL1_DCACHE_LINESIZE))
 static inline Nat round(Nat count, Nat size = 8) {
     return (count + size - 1) / size;
 }
