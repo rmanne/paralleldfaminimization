@@ -22,9 +22,6 @@ DFA* DFA::prepare() { // don't count this to time, skews it too much
     return this;
 }
 
-static inline int factorial(int i) {
-    return i == 0 ? 1 : i * factorial(i - 1);
-}
 bool DFA::operator==(DFA* M) {
     if (Q != M->Q || Σ != M->Σ)
         return false;
