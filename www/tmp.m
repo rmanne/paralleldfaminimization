@@ -1,6 +1,6 @@
 threads = [ 1 2 4 8 ];
 
-timings = [ ...
+final = [ ...
     [ 1.00 2.09 3.44 3.47 ]; ...
     [ 1.00 0.98 1.50 2.12 ]; ...
     [ 1.00 1.75 3.06 3.23 ]; ...
@@ -12,17 +12,43 @@ timings = [ ...
 ];
 
 f = figure();
-plot(threads, timings(1, :));
+plot(threads, final(1, :));
 hold on;
-for i = 2 : size(timings, 1)
-    plot(threads, timings(i, :));
+for i = 2 : size(final, 1)
+    plot(threads, final(i, :));
 end
 hold off;
 title('Speedup Graph');
-%axis([0 8 0 4]);
 xlabel('Number of Threads');
 ylabel('Speedup');
 legend('SS2', 'SC1', 'SCS2', 'R20', 'R1', 'R200', 'PA2', 'PA26');
 legend('show');
 saveas(f, 'final', 'jpg');
+delete(f);
+
+
+initial = [ ...
+    [ 1.00 1.42 1.83 2.09 ]; ...
+    [ 1.00 0.67 0.87 1.22 ]; ...
+    [ 1.00 1.36 1.58 1.82 ]; ...
+    [ 1.00 0.82 0.34 0.20 ]; ...
+    [ 1.00 1.33 1.51 1.71 ]; ...
+    [ 1.00 0.61 0.22 0.15 ]; ...
+    [ 1.00 1.22 0.77 0.74 ]; ...
+    [ 1.00 0.52 0.20 0.13 ]  ...
+];
+
+f = figure();
+plot(threads, initial(1, :));
+hold on;
+for i = 2 : size(initial, 1)
+    plot(threads, initial(i, :));
+end
+hold off;
+title('Speedup Graph');
+xlabel('Number of Threads');
+ylabel('Speedup');
+legend('SS2', 'SC1', 'SCS2', 'R20', 'R1', 'R200', 'PA2', 'PA26');
+legend('show');
+saveas(f, 'initial', 'jpg');
 delete(f);
